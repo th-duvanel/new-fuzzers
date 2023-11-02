@@ -17,43 +17,63 @@ TARGET = Release
 CRYPTO = MbedTls
 TSTTYPE = OsTest
 
-
 .PHONY: all
 
-all: cmocka mbedtls openssl openspdm tlsfuzzer
+all:
+	git clone $(SPDMurl)
+	git --git-dir=./openspdm/.git --work-tree=./openspdm checkout -b tester $(SPDMhash)
+	mv GNUmakefile.Flags ./openspdm/GNUmakefile.Flags
+
+	$(MAKE) cmocka
+	$(MAKE) mbedtls
+	$(MAKE) openssl
+
+	$(MAKE) openspdm
+
+	$(MAKE) clean
+
 
 cmocka:
 	wget $(CMOCKAurl)
-	tar -xvf $(CMOCKAfile)
+	@tar -xvf $(CMOCKAfile)
 	mv cmocka-1.1.5 cmocka
 	mv cmocka openspdm/UnitTest/CmockaLib
 
+
 mbedtls:
 	wget $(MBEDTLSurl) -O $(MBEDTLSfile)
-	tar -xvf $(MBEDTLSfile)
+	@tar -xvf $(MBEDTLSfile)
 	mv mbedtls-mbedtls-2.16.6 mbedtls
 	mv mbedtls openspdm/OsStub/MbedTlsLib
 
+
 openssl:
 	wget $(OPENSSLurl)
-	tar -xvf $(OPENSSLfile)
+	@tar -xvf $(OPENSSLfile)
 	mv openssl-1.1.1g openssl
 	mv openssl openspdm/OsStub/OpensslLib
 
+
 openspdm:
-	git clone $(SPDMurl)
-	cd openspdm
-	git checkout -b tester $(SPDMhash)
-	mkdir build
-	cd build
-	cmake -DARCH=X64 -DTOOLCHAIN=$(TOOLCHAIN) -DTARGET=$(TARGET) -DCRYPTO=$(CRYPTO) -DTESTTYPE=$(TSTTYPE) ..
-	make CopyTestKey
-	make
-	cd ../..
+	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=MbedTls -e WORKSPACE=.
+	mv ./openspdm/Build/DEBUG_GCC/X64 ./openspdm/Build/DEBUG_GCC/TLS_X64
+
+
+	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=MbedTls -e WORKSPACE=.
+	mv ./openspdm/Build/RELEASE_GCC/X64 ./openspdm/Build/RELEASE_GCC/TLS_X64
+
+
+	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=Openssl -e WORKSPACE=.
+	mv ./openspdm/Build/DEBUG_GCC/X64 ./openspdm/Build/DEBUG_GCC/SSL_X64
+
+
+	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=Openssl -e WORKSPACE=.
+	mv ./openspdm/Build/RELEASE_GCC/X64 ./openspdm/Build/RELEASE_GCC/SSL_X64
+
+	
+
 
 tlsfuzzer:
-	yay -S --noconfirm python-tlslite-ng
-	yay -S --noconfirm python-gmpy2
 	git clone $(TLSFZZRurl)
 
 
