@@ -22,13 +22,13 @@ TSTTYPE = OsTest
 all:
 	git clone $(SPDMurl)
 	git --git-dir=./openspdm/.git --work-tree=./openspdm checkout -b tester $(SPDMhash)
-	mv GNUmakefile.Flags ./openspdm/GNUmakefile.Flags
+	cp GNUmakefile.Flags ./openspdm/GNUmakefile.Flags
 
 	$(MAKE) cmocka
 	$(MAKE) mbedtls
 	$(MAKE) openssl
 
-	$(MAKE) openspdm
+	$(MAKE) openspdm_compile
 
 	$(MAKE) clean
 
@@ -54,20 +54,20 @@ openssl:
 	mv openssl openspdm/OsStub/OpensslLib
 
 
-openspdm:
-	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=MbedTls -e WORKSPACE=.
+openspdm_compile:
+	@$(MAKE) -C openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=MbedTls -e WORKSPACE=.
 	mv ./openspdm/Build/DEBUG_GCC/X64 ./openspdm/Build/DEBUG_GCC/TLS_X64
 
 
-	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=MbedTls -e WORKSPACE=.
+	@$(MAKE) -C openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=MbedTls -e WORKSPACE=.
 	mv ./openspdm/Build/RELEASE_GCC/X64 ./openspdm/Build/RELEASE_GCC/TLS_X64
 
 
-	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=Openssl -e WORKSPACE=.
+	@$(MAKE) -C openspdm -f GNUmakefile ARCH=X64 TARGET=DEBUG CRYPTO=Openssl -e WORKSPACE=.
 	mv ./openspdm/Build/DEBUG_GCC/X64 ./openspdm/Build/DEBUG_GCC/SSL_X64
 
 
-	$(MAKE) -C ./openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=Openssl -e WORKSPACE=.
+	@$(MAKE) -C openspdm -f GNUmakefile ARCH=X64 TARGET=RELEASE CRYPTO=Openssl -e WORKSPACE=.
 	mv ./openspdm/Build/RELEASE_GCC/X64 ./openspdm/Build/RELEASE_GCC/SSL_X64
 
 	
